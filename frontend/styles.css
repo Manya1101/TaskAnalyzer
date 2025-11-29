@@ -1,0 +1,50 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    text-align: center;
+}
+
+.card {
+    background: #fff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+}
+
+input, textarea, select, button {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 8px;
+    font-size: 16px;
+}
+
+button {
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.task-card {
+    padding: 10px;
+    border-radius: 6px;
+    margin: 8px 0;
+    color: white;
+}
+
+.high { background-color: #e74c3c; }
+.medium { background-color: #f1c40f; color: black; }
+.low { background-color: #2ecc71; }
