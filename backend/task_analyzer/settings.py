@@ -15,6 +15,7 @@ INSTALLED_APPS = [
 'django.contrib.messages',
 'django.contrib.staticfiles',
 'rest_framework',
+'corsheaders',
 'tasks',
 ]
 
@@ -26,6 +27,8 @@ MIDDLEWARE = [
 'django.middleware.csrf.CsrfViewMiddleware',
 'django.contrib.auth.middleware.AuthenticationMiddleware',
 'django.contrib.messages.middleware.MessageMiddleware',
+'corsheaders.middleware.CorsMiddleware',
+'django.middleware.common.CommonMiddleware',
 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -39,7 +42,23 @@ DATABASES = {
 'NAME': BASE_DIR / 'db.sqlite3',
 }
 }
-
+# new additions
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / "templates"],  # optional, you can create a 'templates' folder
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+# addition ended
 
 STATIC_URL = '/static/'
 
@@ -49,3 +68,5 @@ REST_FRAMEWORK = {
 'rest_framework.renderers.JSONRenderer',
 ),
 }
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CORS_ALLOW_ALL_ORIGINS = True
