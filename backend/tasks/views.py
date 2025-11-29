@@ -1,130 +1,72 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import TaskSerializer
 from .models import Task
-from .scoring import compute_score, detect_circular_dependencies
+from .serializers import TaskSerializer
+from .utils import calculate_priority
+from datetime import date
 
-
-class AnalyzeTasksView(APIView):
-    """POST /api/tasks/analyze/ - accepts JSON array of tasks and returns them with scores"""
-    def post(self, request):
-        payload = request.data
-
-        if not isinstance(payload, list):
-            return Response(
-                {"error": "Expected a JSON array of tasks"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        validated = []
-        tasks_index = {}
-
-        # Validate and normalize tasks
-        for i, item in enumerate(payload):
-            serializer = TaskSerializer(data=item)
-
-            if not serializer.is_valid():
-                return Response(
-                    {"error": f"Invalid task at index {i}", "details": serializer.errors},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            data = serializer.validated_data
-            deps = data.get("dependencies") or []
-            dep_ids = [d.id for d in deps]
-
-            t = {
-                "id": item.get("id") or (i + 1),
-                "title": data.get("title"),
-                "due_date": data.get("due_date"),
-                "estimated_hours": data.get("estimated_hours"),
-                "importance": data.get("importance"),
-                "dependencies": dep_ids,
-            }
-
-            validated.append(t)
-            tasks_index[t["id"]] = t
-
-        # Detect circular dependencies
-        cycles = detect_circular_dependencies(
-            {tid: t["dependencies"] for tid, t in tasks_index.items()}
-        )
-        if cycles:
-            return Response(
-                {"error": "circular_dependencies", "cycles": cycles},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Score tasks
-        scored = []
-        for t in validated:
-            score, explanation = compute_score(t, tasks_index)
-            t_copy = t.copy()
-            t_copy["score"] = score
-            t_copy["explanation"] = explanation
-            scored.append(t_copy)
-
-        # Sorting strategies
-        strategy = request.query_params.get("strategy", "smart")
-
-        if strategy == "fastest":
-            scored.sort(key=lambda x: (x.get("estimated_hours") or 0))
-
-        elif strategy == "impact":
-            scored.sort(key=lambda x: -(x.get("importance") or 0))
-
-        elif strategy == "deadline":
-            scored.sort(
-                key=lambda x: (
-                    9999 if x.get("due_date") is None else x.get("due_date")
-                )
-            )
-
-        else:  # smart balance
-            scored.sort(key=lambda x: -x["score"])
-
-        return Response(scored)
-
-
-class SuggestTasksView(APIView):
-    """GET /api/tasks/suggest/ - returns top 3 tasks stored in DB"""
+# Create/Fetch tasks via API
+class TaskListCreateView(APIView):
+    """
+    POST /api/tasks/ → Create a task
+    GET /api/tasks/ → Get all tasks
+    """
     def get(self, request):
         tasks = Task.objects.all()
-        tasks_index = {}
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
 
-        for t in tasks:
-            tasks_index[t.id] = {
-                "id": t.id,
-                "title": t.title,
-                "due_date": t.due_date,
-                "estimated_hours": t.estimated_hours,
-                "importance": t.importance,
-                "dependencies": [d.id for d in t.dependencies.all()],
-            }
+    def post(self, request):
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            task = serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Detect cycles
-        cycles = detect_circular_dependencies(
-            {tid: data["dependencies"] for tid, data in tasks_index.items()}
-        )
-        if cycles:
-            return Response(
-                {"error": "circular_dependencies_in_db", "cycles": cycles},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        # Score tasks
-        scored = []
-        for t in tasks_index.values():
-            score, explanation = compute_score(t, tasks_index)
-            t["score"] = score
-            t["explanation"] = explanation
-            scored.append(t)
+class TaskAnalyzeView(APIView):
+    """
+    POST /api/tasks/analyze/
+    Accepts a list of task IDs and returns tasks sorted by priority score
+    """
+    def post(self, request):
+        task_ids = request.data.get('task_ids', [])
+        tasks = Task.objects.filter(id__in=task_ids)
+        all_tasks = Task.objects.all()
 
-        scored.sort(key=lambda x: -x["score"])
-        top3 = scored[:3]
+        result = []
+        for task in tasks:
+            score = calculate_priority(task, all_tasks)
+            serializer = TaskSerializer(task)
+            data = serializer.data
+            data['score'] = score
+            result.append(data)
 
-        for t in top3:
-            t["why"] = f"Score {t['score']}: {t['explanation']}"
+        # Sort descending by score
+        result.sort(key=lambda x: x['score'], reverse=True)
+        return Response(result, status=status.HTTP_200_OK)
 
-        return Response(top3)
+
+class TaskSuggestView(APIView):
+    """
+    GET /api/tasks/suggest/
+    Returns top 3 tasks to work on today with explanations
+    """
+    def get(self, request):
+        tasks = Task.objects.filter(completed=False)
+        all_tasks = Task.objects.all()
+
+        task_list = []
+        for task in tasks:
+            score = calculate_priority(task, all_tasks)
+            serializer = TaskSerializer(task)
+            data = serializer.data
+            data['score'] = score
+            explanation = f"Due in {(task.due_date - date.today()).days} days, importance {task.importance}, estimated hours {task.estimated_hours}"
+            data['explanation'] = explanation
+            task_list.append(data)
+
+        # Sort by score descending
+        task_list.sort(key=lambda x: x['score'], reverse=True)
+        return Response(task_list[:3], status=status.HTTP_200_OK)
