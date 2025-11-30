@@ -1,3 +1,4 @@
+/* Body & Container  */
 body {
     font-family: Arial, sans-serif;
     max-width: 800px;
@@ -10,6 +11,7 @@ h1 {
     text-align: center;
 }
 
+/* ===== Cards ===== */
 .card {
     background: #fff;
     padding: 15px;
@@ -18,33 +20,84 @@ h1 {
     box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
 }
 
+/* ===== Inputs & Buttons ===== */
 input, textarea, select, button {
     display: block;
     width: 100%;
     margin: 8px 0;
     padding: 8px;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 button {
     cursor: pointer;
-    background-color: #007bff;
+    background-color: #1100ff;
     color: white;
     border: none;
     border-radius: 4px;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
     background-color: #0056b3;
 }
 
+/* ===== Task Cards ===== */
 .task-card {
     padding: 10px;
     border-radius: 6px;
     margin: 8px 0;
     color: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
-.high { background-color: #e74c3c; }
-.medium { background-color: #f1c40f; color: black; }
-.low { background-color: #2ecc71; }
+/* Priority Colors */
+.high { background-color: #e74c3c; }       /* High priority */
+.medium { background-color: #f1c40f; color: black; } /* Medium priority */
+.low { background-color: #2ecc71; }        /* Low priority */
+
+/* ===== Analyzed Tasks Box ===== */
+.task-box.analyzed {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border-left: 5px solid transparent;
+}
+
+/* Priority border colors for analyzed tasks */
+.task-box.analyzed.high { border-left-color: #e74c3c; }
+.task-box.analyzed.medium { border-left-color: #f1c40f; }
+.task-box.analyzed.low { border-left-color: #2ecc71; }
+
+/* ===== Responsive Layout ===== */
+@media (max-width: 768px) {
+    input, textarea, select, button {
+        font-size: 14px;
+    }
+    .task-card, .task-box.analyzed {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    input, textarea, select, button {
+        font-size: 13px;
+        padding: 6px;
+    }
+    .task-card, .task-box.analyzed {
+        font-size: 13px;
+        padding: 8px;
+    }
+    button {
+        font-size: 14px;
+        padding: 8px;
+    }
+}

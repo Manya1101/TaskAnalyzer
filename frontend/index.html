@@ -7,59 +7,41 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
     <h1>Smart Task Analyzer</h1>
 
-    <!-- Task Input Form -->
-    <section class="card">
-        <h2>Add a Task</h2>
+    <!-- Add Task Form -->
+    <div class="card">
         <form id="taskForm">
             <input type="text" id="title" placeholder="Task Title" required>
-
             <input type="date" id="due_date" required>
-
             <input type="number" id="estimated_hours" placeholder="Estimated Hours" required>
-
             <input type="number" id="importance" placeholder="Importance (1-10)" min="1" max="10" required>
-
             <input type="text" id="dependencies" placeholder="Dependencies (comma-separated IDs)">
-            
             <button type="submit">Add Task</button>
         </form>
-    </section>
+    </div>
 
-    <!-- Bulk JSON Input -->
-    <section class="card">
-        <h2>Bulk Task Input (JSON)</h2>
-
-        <textarea id="bulkInput" rows="6" placeholder='[
-  { "title": "Fix bug A", "due_date": "2025-11-20", "estimated_hours": 2, "importance": 8, "dependencies": [] }
-]'></textarea>
-
+    <!-- Bulk Task Input -->
+    <div class="card">
+        <textarea id="bulkInput" placeholder='Paste JSON array of tasks'></textarea>
         <button id="loadBulk">Load Bulk Tasks</button>
-    </section>
+    </div>
 
-    <!-- Strategy Selector -->
-    <section class="card">
-        <h2>Select Sorting Strategy</h2>
-        <select id="strategy">
-            <option value="smart_balance">Smart Balance</option>
-            <option value="high_impact">High Impact</option>
-            <option value="fastest_wins">Fastest Wins</option>
-            <option value="deadline_driven">Deadline Driven</option>
+    <!-- Sorting Strategy -->
+    <div class="card">
+        <label for="sortStrategy">Sorting Strategy:</label>
+        <select id="sortStrategy">
+            <option value="smart">Smart Balance</option>
+            <option value="fastest">Fastest Wins</option>
+            <option value="impact">High Impact</option>
+            <option value="deadline">Deadline Driven</option>
         </select>
-    </section>
-
-    <!-- Output Section -->
-    <section class="card">
-        <h2>Analyzed Tasks</h2>
-        <div id="taskList"></div>
         <button id="analyzeTasks">Analyze Tasks</button>
+    </div>
 
-    </section>
+    <!-- Task List -->
+    <div id="taskList" class="card"></div>
 
-    <!-- IMPORTANT: SCRIPT LINK -->
     <script src="scripts.js"></script>
-
 </body>
 </html>
